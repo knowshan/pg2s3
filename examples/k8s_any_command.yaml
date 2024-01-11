@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pgdump-to-s3
+  labels:
+    app: pgdump-to-s3
+spec:
+  template:
+    metadata:
+      annotations:
+        # Example using kube2iam annotation
+        iam.amazonaws.com/role: arn:aws:iam::0123456789:role/pg-aurora139-example
+    spec:
+      containers:
+      - name: psqlclient
+        image: pg2s3:latest
+        imagePullPolicy: Never
+        command: ["/src/generic_command.sh"]
+        env:
+        - name: DATABASE_HOST
+          value: "pg-aurora139-example.cluster-oc3qnn.us-east-1.rds.amazonaws.com"
+        - name: DATABASE_NAME
+          value: "amazon"
+        - name: DATABASE_USER_SECRET_ID
+          value: "pg-aurora139-example/DB_USER"
+        - name: DATABASE_PASSWORD_SECRET_ID
+          value: "pg-aurora139-example/DB_PASSWORD"
+        - name: GENERIC_COMMAND
+          value: "psql -h ${DATABASE_HOST} -U ${DATABASE_USER} -d ${DATABASE_NAME} SELECT * FROM pg_extension;"
+      restartPolicy: Never
+  backoffLimit: 4

@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pg-from-s3
+  labels:
+    app: pg-from-s3
+spec:
+  template:
+    metadata:
+      annotations:
+        # Example using kube2iam annotation
+        iam.amazonaws.com/role: arn:aws:iam::0123456789:role/pg-aurora139-example
+    spec:
+      containers:
+      - name: psqlclient
+        image: pg2s3:latest
+        imagePullPolicy: Never
+        command: ["/src/restore_from_s3.sh"]
+        env:
+        - name: DATABASE_HOST
+          value: "pg-aurora139-example.cluster-oc3qnn.us-east-1.rds.amazonaws.com"
+        - name: DATABASE_NAME
+          value: "amazon"
+        - name: DATABASE_USER_SECRET_ID
+          value: "pg-aurora139-example/DB_USER"
+        - name: DATABASE_PASSWORD_SECRET_ID
+          value: "pg-aurora139-example/DB_PASSWORD"
+        - name: SOURCE_S3_PGDUMP_PATH
+          value: "s3://bucket-name/rds/backup/amazon-1704947159.sql.gz"
+      restartPolicy: Never
+  backoffLimit: 4
