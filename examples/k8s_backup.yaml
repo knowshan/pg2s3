@@ -10,13 +10,16 @@ spec:
       annotations:
         # Example using kube2iam annotation
         iam.amazonaws.com/role: arn:aws:iam::0123456789:role/pg-aurora139-example
+        sidecar.istio.io/inject: "false"
     spec:
       containers:
       - name: psqlclient
-        image: pg2s3:latest
-        imagePullPolicy: Never
+        image: knowshan/pg2s3:latest
+        imagePullPolicy: Always
         command: ["/src/backup_to_s3.sh"]
         env:
+        - name: AWS_REGION
+          value: "us-west-2"
         - name: DATABASE_HOST
           value: "pg-aurora139-example.cluster-oc3qnn.us-east-1.rds.amazonaws.com"
         - name: DATABASE_NAME
